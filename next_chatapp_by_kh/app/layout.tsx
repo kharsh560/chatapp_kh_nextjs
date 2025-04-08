@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Barlow, Modern_Antiqua, Inter } from "next/font/google";
 import "./globals.css";
+import { Providers } from "./providers";
+import CustomToast from "@/components/miscellaneousUIcomponents/CustomToast";
 
 const barlow = Barlow({
   weight: "700",
@@ -28,9 +30,12 @@ export default function RootLayout({children} : {children: React.ReactNode}) {
   return (
     <html lang="en">
       <body
-        className={`${inter.className} bg-black`}
+        className={`${inter.className} bg-black h-screen w-screen overflow-hidden`}
       >
-        {children}
+        <Providers>
+          {children}
+          <CustomToast/>
+        </Providers>
       </body>
     </html>
   );

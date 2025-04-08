@@ -1,8 +1,12 @@
 "use client"; // Ensure Framer Motion works on the client side
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import avatars from "@/public/AvatarExporter";
+import MessageInputBox from "./MessageInputBox";
+import { useSession } from "next-auth/react";
+
+
 
 // Dummy data for sidebar
 const dummyChats = [
@@ -30,7 +34,17 @@ const dummyChats = [
     status: "10 members online",
     avatar: avatars.avatar5.src,
   },
+   {
+    id: 5,
+    name: "Gambling Group",
+    status: "23 members online",
+    avatar: avatars.avatar6.src,
+  },
 ];
+
+type firstUser = {
+    username: string
+}
 
 // Dummy messages
 const dummyMessages = [
@@ -40,7 +54,36 @@ const dummyMessages = [
 ];
 
 export function Chatroom() {
+  const session = useSession();
+  const userName = session.data?.user?.name;
   const [activeChat, setActiveChat] = useState(dummyChats[0]);
+  const [messages, setMessages] = useState<{userName: string, message: string}[]>([]);
+  // console.log(messages);
+  interface User {
+    name: string;
+    // Add other properties as needed
+  }
+
+  // const [firstUser, setFirstUser] = useState<string>("");
+
+  // useEffect(() => {
+  //   const getFirstUser = async () => {
+  //       try {
+  //           const res = await fetch("http://localhost:3000/api/getFirstUser");
+  //           if (!res.ok) {
+  //               throw new Error("Failed to fetch user!");
+  //           }
+  //           const user = await res.json();
+  //           setFirstUser(user.username);
+  //           // return user;
+  //       } catch (error) {
+  //           console.log("Error: ", error);
+  //       }
+  //   }
+  //   // getFirstUser();
+  // }, [])
+
+  // console.log(firstUser);
 
   return (
     <div className="h-screen w-full flex flex-row bg-black text-white font-sans">
@@ -75,6 +118,20 @@ export function Chatroom() {
             </div>
           ))}
         </div>
+        {/* <div
+            //   onClick={() => setActiveChat(chat)}
+              className={`flex items-center p-3 cursor-pointer hover:bg-gray-800 transition `}
+            >
+              <img
+                src={avatars.avatar8.src}
+                // alt={chat.name}
+                className="w-10 h-10 rounded-full mr-3"
+              />
+              <div>
+                <div className="font-medium text-white">{firstUser}</div>
+                <div className="text-sm text-gray-400">Online</div>
+              </div>
+            </div> */}
       </motion.aside>
 
       {/* MAIN CHAT SECTION */}
@@ -104,22 +161,22 @@ export function Chatroom() {
           transition={{ delay: 0.1, duration: 0.5 }}
           className="flex-1 overflow-y-auto p-4 space-y-3"
         >
-          {dummyMessages.map((msg) => (
+          {messages.map((msg, index) => (
             <div
-              key={msg.id}
+              key={index}
               className={`flex ${
-                msg.sender === "You" ? "justify-end" : "justify-start"
+                msg.userName === userName ? "justify-end" : "justify-start"
               }`}
             >
               <div
-                className={`max-w-xs rounded-lg p-3 ${
-                  msg.sender === "You"
+                className={`max-w-xs rounded-lg ${
+                  msg.userName === userName
                     ? "bg-gray-800 text-white"
                     : "bg-gray-700 text-gray-200"
-                }`}
+                } ${msg.message ? "p-3" : ""}`}
               >
-                <div className="text-sm font-medium mb-1">{msg.sender}</div>
-                <div className="text-base">{msg.text}</div>
+                <div className="text-sm font-medium mb-1">{msg.userName}</div>
+                <div className="text-base">{msg.message}</div>
               </div>
             </div>
           ))}
@@ -132,11 +189,7 @@ export function Chatroom() {
           transition={{ type: "spring", stiffness: 100 }}
           className="h-16 border-t border-gray-700 flex items-center px-4"
         >
-          <input
-            type="text"
-            placeholder="Type a message..."
-            className="w-full bg-transparent border border-gray-700 rounded-full px-4 py-2 text-white focus:outline-none focus:border-gray-500"
-          />
+          <MessageInputBox setMessages={setMessages} />
         </motion.div>
       </div>
     </div>

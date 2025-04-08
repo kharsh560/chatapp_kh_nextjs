@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { GlobalLoader } from "../miscellaneousUIcomponents/GlobalLoader";
 import { GlobalSpinner } from "../miscellaneousUIcomponents/GlobalSpinner";
+import { signIn } from "next-auth/react";
 
 export function SignUp() {
   const [username, setUsername] = useState<String>("");
@@ -77,9 +78,12 @@ const submitHandler = async (e: React.MouseEvent<HTMLButtonElement>) => {
     console.log("User signed up successfully! JSON response: ", jsonResPostedData);
     setSuccessfullySignedUp(true);
     // await new Promise((r) => setTimeout(r, 2000)); // Artificial delay
-    setTimeout(() => {
-      router.push("/chatroom");
-    }, 2000)
+    // setTimeout(() => {
+    //   router.push("/chatroom");
+    // }, 2000)
+    // If the user has signed up successfully, then let him sign in!
+    await new Promise((r) => setTimeout(r, 1000));
+    await signIn("credentials", { email, password, callbackUrl: "/chatroom" });
   } catch (error) {
     console.error("Something went wrong!", error);
     if (error instanceof Error) {
@@ -120,7 +124,7 @@ const submitHandler = async (e: React.MouseEvent<HTMLButtonElement>) => {
           />
           <button
             type="submit"
-            className="w-full p-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition duration-200"
+            className="w-full p-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition duration-200 cursor-pointer"
             onClick={(e) => submitHandler(e)}
           >
             Sign Up

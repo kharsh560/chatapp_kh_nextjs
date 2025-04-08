@@ -1,13 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useSession } from "next-auth/react";
 import { Inter } from "next/font/google";
 import Link from "next/link";
 
 const inter = Inter({ subsets: ["latin"], weight: ["400", "600", "700"], display: "swap" });
 
 export function HomePage() {
-  const isLoggedIn = false;
+  const session = useSession();
+  const isLoggedIn = session?.data?.user?.name;
   return (
     <div className={`bg-black min-h-screen flex flex-col items-center justify-center px-6 text-white ${inter.className}`}>
       <motion.h1
@@ -29,9 +31,9 @@ export function HomePage() {
       </motion.p>
       
       <div className="flex space-x-4">
-        <Link href={isLoggedIn ? "/chatroom" : "/signin"} >
+        <Link href={isLoggedIn ? "/chatroom" : "/api/auth/signin"} >
           <motion.button
-            className="px-6 py-3 bg-white text-black rounded-lg text-lg font-semibold shadow-lg transition hover:bg-gray-200"
+            className="px-6 py-3 bg-white text-black rounded-lg text-lg font-semibold shadow-lg transition hover:bg-gray-200 cursor-pointer"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
@@ -39,7 +41,7 @@ export function HomePage() {
           </motion.button>
         </Link>
         <motion.button
-          className="px-6 py-3 border border-gray-500 text-gray-300 rounded-lg text-lg font-semibold backdrop-blur-lg bg-white/10 hover:bg-white/20 transition"
+          className="px-6 py-3 border border-gray-500 text-gray-300 rounded-lg text-lg font-semibold backdrop-blur-lg bg-white/10 hover:bg-white/20 transition cursor-pointer"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
