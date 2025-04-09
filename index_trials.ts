@@ -213,8 +213,8 @@
 // // const wss = new WebSocketServer({ server: httpServer });
 
 // // wss.on("connection", (ws, req) => {
-// //     const { query } = parse(req.url!, true); // Extract query params
-// //     const clientId = query.clientId as string; // Get clientId from URL
+    // const { query } = parse(req.url!, true); // Extract query params
+    // const clientId = query.clientId as string; // Get clientId from URL
 
 // //     if (!clientId) {
 // //         console.log("Client ID missing. Closing connection.");

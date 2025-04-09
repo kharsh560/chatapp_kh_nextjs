@@ -1,12 +1,13 @@
 "use client";
 import avatars from "@/public/AvatarExporter";
-import { closeConnection, openConnection } from "@/reduxStore/storeFeatures/WebSocketSlice";
 import { getToken } from "next-auth/jwt";
 import { signOut, useSession } from "next-auth/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
+import { Home, MessageCircle, Users, HeartPulse } from 'lucide-react';
+
 
 type userDetailsType = {
   "login": string,
@@ -66,6 +67,7 @@ export function UserInfo({userDetails}:{userDetails: userDetailsType}) {
     // );
     const router = useRouter();
     const session = useSession();
+    // console.log("Client session: ",session);
     const userName = session.data?.user?.name;
     console.log(userName);
 
@@ -121,6 +123,23 @@ export function UserInfo({userDetails}:{userDetails: userDetailsType}) {
 //         ws.close();
 //         };
 //   }, [userName]);
+
+const healthCheck = async () => {
+  try {
+    const resp = await fetch("http://localhost:6900/api/v1/healthcheck", {
+        method: "GET",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        credentials: 'include',
+    })
+
+    const jsonResponse = await resp.json();
+    console.log(jsonResponse);
+  } catch (error) {
+    console.log("Error: ", error)
+  }
+}
     
     return (
         <div>
@@ -139,6 +158,11 @@ export function UserInfo({userDetails}:{userDetails: userDetailsType}) {
                     {/* <span className="text-sm"> {userDetails?.name} </span> */}
                     <span className="text-sm cursor-default w-full"> {session?.data ? <div>   <p>{session.data.user?.name}</p> </div> : "..."} </span>
                     {/* {userData?.name} */}
+                </div>
+
+                <div className="flex items-center space-x-3 p-2 rounded-md hover:bg-gray-800 cursor-pointer">
+                    <HeartPulse size={20} />
+                    <button onClick={healthCheck}>Health Check</button>
                 </div>
 
                 <button className="p-1 bg-gray-800 text-white text-xs rounded-lg hover:bg-gray-700 transition duration-200 cursor-pointer w-24" onClick={ async () => {

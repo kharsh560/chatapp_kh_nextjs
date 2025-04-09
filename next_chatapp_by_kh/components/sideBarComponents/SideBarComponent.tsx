@@ -1,31 +1,33 @@
 import avatars from '@/public/AvatarExporter';
-import { Home, MessageCircle, Users } from 'lucide-react';
+import { Home, MessageCircle, Users, HeartPulse } from 'lucide-react';
 import Image from 'next/image';
 import { UserInfo } from './UserInfoSidebarBottomCompinent';
 import Link from 'next/link';
 import { getServerSession } from 'next-auth';
+import { NEXT_AUTH_CONFIG } from '@/utils/NextAuthConfig';
 
 const getUserData = async () => {
     console.log("Artificial delay starts.");
     // await new Promise((r) => setTimeout(r, 2000));
     console.log("Artificial delay ends.")
-        try {
-            const response = await fetch("http://localhost:3000/api/getUser");
-            // https://api.github.com/users/kharsh560
-            if (!response.ok) {
-                console.log(`Response status: ${response.status}`);
-                return null;
-            }
-            const userDataJson = await response.json();
-            return userDataJson;
-        } catch (error) {
-            console.log("Something went wrong!", error);
-        } 
-    }
+    try {
+        const response = await fetch("http://localhost:3000/api/getUser");
+        // https://api.github.com/users/kharsh560
+        if (!response.ok) {
+            console.log(`Response status: ${response.status}`);
+            return null;
+        }
+        const userDataJson = await response.json();
+        return userDataJson;
+    } catch (error) {
+        console.log("Something went wrong!", error);
+    } 
+}
+
 
 export async function Sidebar() {
-    const session = await getServerSession();
-  console.log(session);
+    const session = await getServerSession(NEXT_AUTH_CONFIG);
+  // console.log("Server session: ",session);
     // getUserData().then((data) => console.log(data));
     const userDetails = await getUserData();
   return (
