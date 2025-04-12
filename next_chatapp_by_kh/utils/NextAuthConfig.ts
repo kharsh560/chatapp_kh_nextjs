@@ -38,6 +38,7 @@ export const NEXT_AUTH_CONFIG = {
                     id: `${user?.id}`,
                     name: user?.username,
                     email: user?.email,
+                    avatar: user?.avatar,
                 };
             }
         }),
@@ -64,19 +65,26 @@ export const NEXT_AUTH_CONFIG = {
 
     callbacks: {
     // This runs when the JWT is created or updated
-    // async jwt({ token, user } : {token : any, user : any}) {
-    //     console.log("token: ", token);
-    //     if (user) {
-    //         token.id = user.id; 
-    //     }
-    //     return token;
-    // },
+
+    // NOTE; 
+    // To include the avatar field in the NextAuth session, you need to make sure it's set on the JWT token in the jwt() callback and then passed to the session inside the session() callback.
+
+    async jwt({ token, user } : { token : any, user : any}) {
+    if (user) {
+      token.id = user.id;
+      token.name = user.name;
+      token.email = user.email;
+      token.avatar = user.avatar; // 👈 Add this
+    }
+    return token;
+  },
 
     // // This runs when the session is created
     async session({ session, token } : any) {
       if (session.user && token) {
         // session.user.id = token.id as string; 
-        session.user.id = token.sub as string; 
+        session.user.id = token.sub as string; // Yeah, we can do this directly, bcoz "sub" is having "id" only in it!
+        session.user.avatar = token.avatar as string;
       }
       return session;
     },

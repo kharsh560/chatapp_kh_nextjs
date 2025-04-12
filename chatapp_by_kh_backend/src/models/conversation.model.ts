@@ -7,12 +7,20 @@ const conversationSchema = new mongoose.Schema({
   },
   conversations: [
     {
+      uniqueChatUUID: {
+        type: String,
+        required: true,
+      },
       isGroup: {
         type: Boolean,
         required: true,
       },
       otherParty: {
         type: String, // either another user's UUID or a group's _id as string
+        required: true,
+      },
+      otherPartyDP: {
+        type: String,
         required: true,
       },
       lastRead: {

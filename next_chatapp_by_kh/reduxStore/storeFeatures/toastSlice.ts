@@ -1,10 +1,21 @@
 import { createSlice } from "@reduxjs/toolkit";
 
-enum toastStates {
-    none,
-    error,
-    warning,
-    success
+// 🔧 By default, enums in TypeScript are number-based:
+
+// export enum toastStates {
+//   none,     // 0
+//   error,    // 1
+//   warning,  // 2
+//   success   // 3
+// }
+
+// If you want to use strings, you must explicitly assign them:
+
+export enum toastStates {
+  none = "none",
+  error = "error",
+  warning = "warning",
+  success = "success"
 }
 
 type toastSliceStatesType = {

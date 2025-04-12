@@ -44,7 +44,7 @@ export function useConnectWebSocket() {
       const authResJson = await authRes.json();
     //   console.log("Before: ", authResJson.token);
     //   console.log("Secret: ", secret);
-    console.log("Running on:", typeof window === "undefined" ? "Server" : "Client");
+    // console.log("Running on:", typeof window === "undefined" ? "Server" : "Client");
       
     // const decoded = verify(authResJson.token, secret);
     // const decoded = verify(authResJson.token, process.env.NEXT_PUBLIC_WEB_SOCKET_VALIDATION_SECRET as string);
@@ -93,7 +93,7 @@ export function useConnectWebSocket() {
 
       // Dispatch the socket to Redux state.
       if (!id) {
-          dispatch(setSocket({socket, id: session?.user.id, createdAt: Date.now()}));
+          dispatch(setSocket({socket, id: session?.user.id}));
       }
 
       return socket;

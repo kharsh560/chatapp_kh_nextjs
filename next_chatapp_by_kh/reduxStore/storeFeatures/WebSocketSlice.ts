@@ -3,13 +3,13 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 interface SocketState {
     id: string | null;
     socket: WebSocket | null;
-    createdAt: Date | null;
+    // createdAt: Date | null;
 }
 
 const initialState: SocketState = {
     id: null,
   socket: null,
-  createdAt: null,
+  // createdAt: null,
 };
 
 const socketSlice = createSlice({
@@ -19,7 +19,7 @@ const socketSlice = createSlice({
     setSocket(state, action) {
       state.socket = action.payload?.socket;
       state.id = action.payload?.id;
-      state.createdAt = action.payload?.createdAt;
+      // state.createdAt = action.payload?.createdAt;
       // return {
       //   ...state,
       //   socket: action.payload?.socket,

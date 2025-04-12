@@ -45,10 +45,8 @@ type userDetailsType = {
   "updated_at": string
 }
 
-// const socketRef = useRef<WebSocket | null>(null);
 
-
-export function UserInfo({userDetails}:{userDetails: userDetailsType}) {
+export function UserInfo() {
     // const [userData, setUserData] = useState<userDetailsType | null>(null);
     // const [loadingState, setLoadingState] = useState(true);
     // useEffect(() => {
@@ -65,13 +63,14 @@ export function UserInfo({userDetails}:{userDetails: userDetailsType}) {
     //         ...
     //     </div>
     // );
-    const router = useRouter();
+    // const router = useRouter();
     const session = useSession();
     // console.log("Client session: ",session);
     const userName = session.data?.user?.name;
-    console.log(userName);
+    const userAvatar = session.data?.user?.avatar;
+    // console.log(session);
 
-    const dispatch = useDispatch();
+    // const dispatch = useDispatch();
 
 //     useEffect(() => {
 //         // if (status === "loading") return; // Wait for session
@@ -149,7 +148,7 @@ const healthCheck = async () => {
                     <Image
                     // src={userData ? userData.avatar_url : ""}
                     // src={userDetails?.avatar_url}
-                    src={avatars.avatar8.src}
+                    src={userAvatar || avatars.avatar8.src}
                     alt="User Avatar"
                     width={40}
                     height={40}

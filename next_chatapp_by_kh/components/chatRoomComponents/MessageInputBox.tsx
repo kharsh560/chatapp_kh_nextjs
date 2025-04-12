@@ -2,21 +2,21 @@
 
 import { RootState } from '@/reduxStore/store/store';
 import { setSocket } from '@/reduxStore/storeFeatures/WebSocketSlice';
+import { messageTypes, useSendMessageThroughWs } from '@/utils/sendMessageThroughWs';
 import { useConnectWebSocket } from '@/utils/webSocketConnectionLogic';
 import { useSession } from 'next-auth/react';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 
 type Props = {
-    setMessages: any;
+    setMessagesInStateArray: any;
 }
 
-const MessageInputBox = memo(({setMessages}: Props) => {
+const MessageInputBox = memo(({setMessagesInStateArray}: Props) => {
     // console.log("Running");
     // console.log(ws);
     const [message, setMessage] = useState("");
     const session = useSession();
-    const userName = session.data?.user?.name;
     const dispatch = useDispatch();
     // const server = useMemo(() => {
     //     console.log("______________ New socket connected from frontend! ______________ ");
@@ -27,7 +27,7 @@ const MessageInputBox = memo(({setMessages}: Props) => {
     // let serverRef = useRef<WebSocket | null | undefined>(null);
 
     let socket = useSelector((state: RootState) => state.socket.socket);
-    const createdAt = useSelector((state: RootState) => state.socket.createdAt);
+    // const createdAt = useSelector((state: RootState) => state.socket.createdAt);
 
     // const socket = useSelector((state: RootState) => {
     //     console.log("Selecting socket:", state.socket.socket);
@@ -38,8 +38,7 @@ const MessageInputBox = memo(({setMessages}: Props) => {
 
     // const socketAndId = useSelector((state: RootState) => state.socket);
 
-    // Alternatively, you can get the connection method from your custom hook.
-    const { connectWebSocket } = useConnectWebSocket();
+
 
     // const handleReconnect = useCallback(() => {
     //     // Use your connect function if needed.
@@ -51,56 +50,54 @@ const MessageInputBox = memo(({setMessages}: Props) => {
     //     didConnect.current = true;
     // }
 
-    useEffect(() => {
-        console.log("Inside the socket above connectWebSocket()");
-        connectWebSocket();
-
-        // return () => {
-        //     if (socket) {
-        //         console.log("Closing the socket connection!");
-        //         (socket as WebSocket).close();
-        //         dispatch(setSocket(null));
-        //     }
-        // };
-        
-    }, []);
+ 
     
     useEffect(() => {
-        console.log("Inside the socket.");
+        console.log("Inside the socket. And here is the socket: ", socket);
         // if (socket) {
         //     if (socket.readyState == 1) {
         //         console.log("Inside the socket send and onmessage");
         //         // socket.send(JSON.stringify({userName, message: `Client: ${userName} is connected!` }));
         //         socket.onmessage = (event) => {
         //             console.log("Received:", event.data);
-        //             setMessages((prev : any) => [...prev, JSON.parse(event.data)]);
+        //             setMessagesInStateArray((prev : any) => [...prev, JSON.parse(event.data)]);
         //         };
         //     }
         // }
         // NOTE: Fix; Attached onopen instead of relying on .readyState === 1 inside useEffect
         if (socket) {
-            socket.onopen = () => {
-                console.log("Socket is open now!");
-                socket.send(JSON.stringify({ userName, message: `Client: ${userName} is connected!` }));
-            };
+            if (socket.readyState != 1) {
+                console.log("Came inside this condition: [socket.readyState != 1], but didn't let it go ahead!");
+                // DEBUG! It should not happen that this component should run even after the cleanup!
+                return;
+            }
+            // socket.send(JSON.stringify({ type: "alert" ,sender: userName, reciever: "Will get it from active chat!", message: `Client: ${userName} is connected!` }));
+            // socket.onopen = () => {
+            //     console.log("Socket is open now!");
+            // };
 
             socket.onmessage = (event) => {
                 console.log("Received:", event.data);
-                setMessages((prev: any) => [...prev, JSON.parse(event.data)]);
+                setMessagesInStateArray((prev: any) => [...prev, JSON.parse(event.data)]);
             };
         }
 
-         return () => {
+        return () => {
             if (socket) {
-                socket.send(JSON.stringify({ userName, message: `Client: ${userName} is closing the socket connection!` }));
-                console.log("Closing the socket connection!");
-                (socket as WebSocket).close();
-                dispatch(setSocket(null));
+                console.log("Cleaning up WebSocket events...");
+                socket.onopen = null;
+                socket.onmessage = null;
             }
         };
 
-    }, [socket, createdAt])
+    }, [socket])
 
+    useEffect(() => {
+        return () => {
+            console.log("🧹 Component is unmounting!");
+            // You can clean up subscriptions, timeouts, listeners etc. here
+        };
+    }, []);
 
     // useEffect(() => {
     //     server.onopen = () => {
@@ -129,7 +126,7 @@ const MessageInputBox = memo(({setMessages}: Props) => {
             //     serverRef.current?.send(JSON.stringify({userName, message: `Client: ${userName} is connected!` }));
             //     serverRef.current!.onmessage = (event) => {
             //         // console.log("Received:", event.data);
-            //         setMessages((prev : any) => [...prev, JSON.parse(event.data)]);
+            //         setMessagesInStateArray((prev : any) => [...prev, JSON.parse(event.data)]);
             //     };
             // };
 
@@ -144,10 +141,18 @@ const MessageInputBox = memo(({setMessages}: Props) => {
     //     }
     // }, [userName]);
 
+    const sendWsMessage = useSendMessageThroughWs();
+
     const sendMessageHandler = () => {
         // server.send("message");
         // console.log(id, socket);
-        socket?.send(JSON.stringify({userName, message}));
+        // socket?.send(JSON.stringify({userName, message}));
+
+        if(socket) {
+            sendWsMessage(messageTypes.message, message)
+        }
+
+        // socket?.send(JSON.stringify({ type: "message", sender: {userId, userName}, reciever: {userId: otherPartyId, userName: otherPartyName}, message }));
         // console.log("Lingering WS connections:- ", wsArr.length);
         // console.log(message);
         setMessage("");

@@ -1,14 +1,8 @@
 "use client";
 
 
+import { toastStates } from "@/reduxStore/storeFeatures/toastSlice";
 import { useSelector } from "react-redux";
-
-enum toastStates {
-    none,
-    error,
-    warning,
-    success
-}
 
 type toastSliceStatesType = {
     visible: boolean;

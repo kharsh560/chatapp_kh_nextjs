@@ -1,15 +1,8 @@
 "use client";
 
-import { hideToast, showToast } from "@/reduxStore/storeFeatures/toastSlice";
+import { hideToast, showToast, toastStates } from "@/reduxStore/storeFeatures/toastSlice";
 import { useDispatch } from "react-redux";
 import { useCallback } from "react";
-
-enum toastStates {
-    none,
-    error,
-    warning,
-    success
-}
 
 // ✅ Convert it into a custom hook
 export function useKHtoast() {

@@ -1,68 +1,80 @@
 "use client"; // Ensure Framer Motion works on the client side
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import avatars from "@/public/AvatarExporter";
 import MessageInputBox from "./MessageInputBox";
 import { useSession } from "next-auth/react";
+import { useDispatch, useSelector } from "react-redux";
+import { populateUsers } from "@/reduxStore/storeFeatures/allUsersSlice";
+import { NewUsersDropDownComponent } from "./NewUsersDropDownComponent";
+import { RootState } from "@/reduxStore/store/store";
+import { useConnectWebSocket } from "@/utils/webSocketConnectionLogic";
+import { setSocket } from "@/reduxStore/storeFeatures/WebSocketSlice";
+import { chatMessagePayload, messageTypes, useSendMessageThroughWs } from "@/utils/sendMessageThroughWs";
+import { resetActiveChat } from "@/reduxStore/storeFeatures/activeChatSlice";
 
 
-
-// Dummy data for sidebar
-const dummyChats = [
-  {
-    id: 1,
-    name: "Alice Johnson",
-    status: "Online",
-    avatar: avatars.avatar2.src,
-  },
-  {
-    id: 2,
-    name: "Developers Group",
-    status: "3 members online",
-    avatar: avatars.avatar3.src,
-  },
-  {
-    id: 3,
-    name: "John Doe",
-    status: "Offline",
-    avatar: avatars.avatar4.src,
-  },
-  {
-    id: 4,
-    name: "Family Group",
-    status: "10 members online",
-    avatar: avatars.avatar5.src,
-  },
-   {
-    id: 5,
-    name: "Gambling Group",
-    status: "23 members online",
-    avatar: avatars.avatar6.src,
-  },
-];
-
-type firstUser = {
-    username: string
+export type userSliceStatesType = {
+    id: string;
+    username: string;
+    email: string;
+    avatar: string;
 }
 
-// Dummy messages
-const dummyMessages = [
-  { id: 1, sender: "Alice Johnson", text: "Hey there! How's it going?" },
-  { id: 2, sender: "You", text: "All good! Working on a new project." },
-  { id: 3, sender: "Alice Johnson", text: "Nice! Let’s chat more about it." },
-];
-
-export function Chatroom() {
+export const Chatroom = memo(({users} : {users: userSliceStatesType[]}) => {
   const session = useSession();
+  // console.log(session);
+  const userId = session.data?.user?.id;
   const userName = session.data?.user?.name;
-  const [activeChat, setActiveChat] = useState(dummyChats[0]);
-  const [messages, setMessages] = useState<{userName: string, message: string}[]>([]);
+  const [messages, setMessages] = useState<chatMessagePayload[]>([]);
+  const prevConversations = null;
+  const dispatch = useDispatch();
+  const activeChat = useSelector((state : any) => {
+    // console.log("state.activeChat", state.activeChat);
+    return state.activeChat;
+  });
+
+    const { connectWebSocket } = useConnectWebSocket();
+
+    const sendWsMessage = useSendMessageThroughWs();
+
+    const socket = useSelector((state: RootState) => state.socket.socket);
+
+     useEffect(() => {
+          console.log("Inside the socket above connectWebSocket()");
+          connectWebSocket();
+      }, []);
+
+      useEffect(() => {
+        return () => {
+            if (socket) {
+                // socket.send(JSON.stringify({ userId, message: `Client: ${userId} is closing the socket connection!` }));
+                // const newActiveChat = activeChat;
+                // sendWsMessage(messageTypes.closingConnection, `Client: ${userName} has closed the socket connection!`, newActiveChat)
+                console.log("Closing the socket connection!");
+                (socket as WebSocket).close();
+                dispatch(setSocket(null));
+                // dispatch(resetActiveChat());
+            }
+        };
+      }, [socket])
+
+//   useEffect(() => {
+//   console.log("activeChat changed:", activeChat);
+// }, [activeChat]);
+
+  // console.log("activeChat", activeChat);
+
+
+  // console.log("users: ", users);
+
+  useEffect(() => {
+    dispatch(populateUsers(users));
+  }, [users])
+
   // console.log(messages);
-  interface User {
-    name: string;
-    // Add other properties as needed
-  }
+ 
 
   // const [firstUser, setFirstUser] = useState<string>("");
 
@@ -74,7 +86,7 @@ export function Chatroom() {
   //               throw new Error("Failed to fetch user!");
   //           }
   //           const user = await res.json();
-  //           setFirstUser(user.username);
+  //           setFirstUser(user.userId);
   //           // return user;
   //       } catch (error) {
   //           console.log("Error: ", error);
@@ -97,45 +109,17 @@ export function Chatroom() {
         <div className=" h-16 p-4 border-b border-gray-700 text-xl font-semibold">
           Chats & Groups
         </div>
+        < NewUsersDropDownComponent setMessages={setMessages} newUsers={users} />
         <div className="flex-1 overflow-y-auto">
-          {dummyChats.map((chat) => (
-            <div
-              key={chat.id}
-              onClick={() => setActiveChat(chat)}
-              className={`flex items-center p-3 cursor-pointer hover:bg-gray-800 transition ${
-                chat.id === activeChat.id ? "bg-gray-800" : ""
-              }`}
-            >
-              <img
-                src={chat.avatar}
-                alt={chat.name}
-                className="w-10 h-10 rounded-full mr-3"
-              />
-              <div>
-                <div className="font-medium">{chat.name}</div>
-                <div className="text-sm text-gray-400">{chat.status}</div>
-              </div>
-            </div>
-          ))}
+          {prevConversations == null ? <p className=" p-2 text-gray-400">Start a fresh conversation!</p> : ""}
+          
         </div>
-        {/* <div
-            //   onClick={() => setActiveChat(chat)}
-              className={`flex items-center p-3 cursor-pointer hover:bg-gray-800 transition `}
-            >
-              <img
-                src={avatars.avatar8.src}
-                // alt={chat.name}
-                className="w-10 h-10 rounded-full mr-3"
-              />
-              <div>
-                <div className="font-medium text-white">{firstUser}</div>
-                <div className="text-sm text-gray-400">Online</div>
-              </div>
-            </div> */}
       </motion.aside>
 
       {/* MAIN CHAT SECTION */}
-      <div className="flex-1 flex flex-col">
+      {!activeChat.activeChatPresent ? "" : 
+      <div className={`flex-1 flex flex-col `}>
+        {/* ${activeChat.otherPartyId == "" ? "hidden" : "block"} */}
         {/* HEADER */}
         <motion.header
           initial={{ y: -50, opacity: 0 }}
@@ -144,13 +128,13 @@ export function Chatroom() {
           className=" h-16 flex items-center p-4 border-b border-gray-700"
         >
           <img
-            src={activeChat.avatar}
-            alt={activeChat.name}
+            src={activeChat?.otherPartyDP}
+            alt={activeChat?.otherPartyName}
             className="w-10 h-10 rounded-full mr-3"
           />
           <div>
-            <div className="font-semibold">{activeChat.name}</div>
-            <div className="text-sm text-gray-400">{activeChat.status}</div>
+            <div className="font-semibold">{activeChat?.otherPartyName}</div>
+            {/* <div className="text-sm text-gray-400">{activeChat.status}</div> */}
           </div>
         </motion.header>
 
@@ -162,23 +146,29 @@ export function Chatroom() {
           className="flex-1 overflow-y-auto p-4 space-y-3"
         >
           {messages.map((msg, index) => (
-            <div
+            msg.typeOfMessage == (messageTypes.message.toString()) ? (<div
               key={index}
               className={`flex ${
-                msg.userName === userName ? "justify-end" : "justify-start"
+                msg.sender.userId === userId ? "justify-end" : "justify-start"
               }`}
             >
               <div
                 className={`max-w-xs rounded-lg ${
-                  msg.userName === userName
+                  msg.sender.userId === userId
                     ? "bg-gray-800 text-white"
                     : "bg-gray-700 text-gray-200"
                 } ${msg.message ? "p-3" : ""}`}
               >
-                <div className="text-sm font-medium mb-1">{msg.userName}</div>
+                <div className="text-sm mb-1">{msg.sender.userName}</div>
                 <div className="text-base">{msg.message}</div>
               </div>
-            </div>
+            </div>) : (
+              <div key={index} className={`flex w-full justify-center `}>
+                <p className=" rounded-lg text-sm p-1 text-purple-600 bg-purple-600/30">
+                  {msg.message}
+                </p>
+              </div>
+            )
           ))}
         </motion.div>
 
@@ -189,9 +179,11 @@ export function Chatroom() {
           transition={{ type: "spring", stiffness: 100 }}
           className="h-16 border-t border-gray-700 flex items-center px-4"
         >
-          <MessageInputBox setMessages={setMessages} />
+          <MessageInputBox setMessagesInStateArray={setMessages} />
         </motion.div>
-      </div>
+      </div>}
     </div>
   );
-}
+})
+
+

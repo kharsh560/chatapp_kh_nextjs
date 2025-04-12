@@ -1,15 +1,9 @@
 "use client";
 
+import { toastStates } from "@/reduxStore/storeFeatures/toastSlice";
 import {useKHtoast} from "@/utils/toastHandler";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-
-enum toastStates {
-    none,
-    error,
-    warning,
-    success
-}
 
 export function SignInButton({email, password} : {email: string, password: string}) {
   const router = useRouter();
