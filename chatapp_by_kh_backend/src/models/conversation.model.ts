@@ -1,8 +1,12 @@
 import mongoose from "mongoose";
 
 const conversationSchema = new mongoose.Schema({
-  user: {
+  userUUID: {
     type: String, // user UUID
+    required: true,
+  },
+  userName: {
+    type: String,
     required: true,
   },
   conversations: [
@@ -20,6 +24,10 @@ const conversationSchema = new mongoose.Schema({
         required: true,
       },
       otherPartyDP: {
+        type: String,
+        required: true,
+      },
+      otherPartyName: {
         type: String,
         required: true,
       },

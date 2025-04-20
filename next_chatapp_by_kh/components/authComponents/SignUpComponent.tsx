@@ -26,7 +26,7 @@ export function SignUp() {
   //   }
   //   console.log(`username: ${username} | email: ${email} | password: ${password}`);
   //   try {
-  //     const postedData = await fetch("http://localhost:3000/api/registerUser", {
+  //     const registerUserRes = await fetch("http://localhost:3000/api/registerUser", {
   //       method: "POST",
   //       headers: {
   //         "Content-Type": "application/json"
@@ -37,14 +37,14 @@ export function SignUp() {
   //         password
   //       })
   //     })
-  //     // console.log("Direct response, without converting to json: ", postedData);
-  //     if (!postedData.ok) {
-  //       console.log("Error", postedData);
+  //     // console.log("Direct response, without converting to json: ", registerUserRes);
+  //     if (!registerUserRes.ok) {
+  //       console.log("Error", registerUserRes);
   //       // NOTE: // ✅ Throw error so it goes to `catch` :-
   //       throw new Error("Failed to register user"); 
   //     }
-  //     const jsonResPostedData = await postedData.json();
-  //     console.log("User signed up successfully! Json convert response: ", jsonResPostedData);
+  //     const jsonResregisterUserRes = await registerUserRes.json();
+  //     console.log("User signed up successfully! Json convert response: ", jsonResregisterUserRes);
   //     router.push("/chatroom")
   //   } catch (error) {
   //     console.log("Something went wrong!", error);
@@ -64,18 +64,51 @@ const submitHandler = async (e: React.MouseEvent<HTMLButtonElement>) => {
 
     console.log(`username: ${username} | email: ${email} | password: ${password}`);
 
-    const postedData = await fetch("http://localhost:3000/api/registerUser", {
+    const registerUserRes = await fetch("http://localhost:3000/api/registerUser", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, email, password }),
     });
 
-    if (!postedData.ok) {
-      throw new Error("Failed to register user"); // ✅ Ensures errors always go to `catch`
+    if (!registerUserRes.ok) {
+      throw new Error("Failed to register user"); // Ensures errors always go to `catch`
     }
 
-    const jsonResPostedData = await postedData.json();
-    console.log("User signed up successfully! JSON response: ", jsonResPostedData);
+    const jsonRegisterUserRes = await registerUserRes.json();
+    const newlyCreatedUser = jsonRegisterUserRes.newlyCreatedUser;
+    console.log("User signed up successfully! JSON response: jsonRegisterUserRes.newlyCreatedUser ", newlyCreatedUser);
+
+    /*
+    "newlyCreatedUser" output:
+avatar
+: 
+"https://res.cloudinary.com/dx5dlghqe/image/upload/v1735927377/genderNeutralAvatar_ywbjph.png"
+email
+: 
+"angela@gmail.com"
+id
+: 
+"1c71bb00-3882-473b-95ef-7e12ca93fbfb"
+password
+: 
+"1111"
+username
+: 
+"Angela"
+    */
+
+    const createConversationRes = await fetch("http://localhost:6900/app/v1/conversations/createConversations", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({newlyCreatedUser}),
+    });
+
+    if (!createConversationRes.ok) {
+      throw new Error("Failed to register user"); // Ensures errors always go to `catch`
+    }
+
+    // console.log("createConversationRes: ", createConversationRes)
+
     setSuccessfullySignedUp(true);
     // await new Promise((r) => setTimeout(r, 2000)); // Artificial delay
     // setTimeout(() => {

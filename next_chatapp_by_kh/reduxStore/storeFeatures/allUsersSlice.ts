@@ -21,7 +21,8 @@ export const allUsersSlice = createSlice({
     initialState,
     reducers: {
         populateUsers: (state, action) => {
-            state = action.payload; // Needs array of userObjects!
+            // state = action.payload; // Needs array of userObjects!
+            return [...action.payload];
         }
     }
 });

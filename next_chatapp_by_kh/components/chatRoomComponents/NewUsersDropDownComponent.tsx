@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, OctagonX } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { activeChatSliceStatesType, setActiveChat } from "@/reduxStore/storeFeatures/activeChatSlice";
 import { RootState } from "@/reduxStore/store/store";
@@ -11,11 +11,18 @@ import { messageTypes, useSendMessageThroughWs } from "@/utils/sendMessageThroug
 import { userSliceStatesType } from "./ChatRoomComponent";
 
 
-const NewUsersDropDownComponent = ({newUsers, setMessages} : {newUsers : userSliceStatesType[], setMessages : any}) => {
+const NewUsersDropDownComponent = ({setMessages} : {setMessages : any}) => {
     // Further, new Users will also be filtered using the current user's conversations!
+    const newUsers : userSliceStatesType[] = useSelector((state : any) => state.allUsersArray);
+    // console.log("newUsers: ", newUsers);
+    const newUsersNotPresent : boolean = (newUsers.length == 0);
+    // || (newUsers.length == 1 && newUsers[0].id == "") -> No need. Actually the newUsers weren't populating only! So I returned the "action.payload" directly!
   const [isOpen, setIsOpen] = useState(false);
     const dispatch = useDispatch();
-  const toggleDropdown = () => setIsOpen((prev) => !prev);
+  const toggleDropdown = () => {
+    if (newUsersNotPresent) return;
+    setIsOpen((prev) => !prev);
+  };
   const session = useSession();
   const userName = session.data?.user?.name;
   const userId = session.data?.user?.id;
@@ -31,23 +38,29 @@ const sendWsMessage = useSendMessageThroughWs();
 // See, the logic is, any user which is clicked here, is sure to be absent in the history of both the sender and the reciever!
 // So, it will be the first time when you will be creating it. (Caviard: What is in real-time, reciever creates the grp before you?)
 
-    const sendIngressEgressMessageToServer = (newActiveChat : activeChatSliceStatesType) => {
-        if (socket) {
-            if (activeChat.activeChatPresent) {
-                sendWsMessage(messageTypes.egress, `Client: ${userName} is disconnected!`)
-                setMessages([]);
-            }
-            // Yes, "ingress" toh hoga hee!
-            sendWsMessage(messageTypes.ingress, `Client: ${userName} is connecting!`, newActiveChat);
-            // sendWsMessage(messageTypes.connected, `Client: ${userName} is connected!`);
-        }
-    }
+  const sendIngressEgressMessageToServer = (newActiveChat : activeChatSliceStatesType) => {
+      if (socket) {
+          if (activeChat.activeChatPresent) {
+              sendWsMessage(messageTypes.egress, `Client: ${userName} is disconnected!`)
+              setMessages([]);
+          }
+          // Yes, "ingress" toh hoga hee!
+          sendWsMessage(messageTypes.ingress, `Client: ${userName} is connecting!`, newActiveChat, true);
+          // sendWsMessage(messageTypes.connected, `Client: ${userName} is connected!`);
+      }
+  }
+
+  const generateConversationId = (userId1: string, userId2: string): string => {
+    return [userId1, userId2].sort().join("+");
+  };
 
 
   const handleNewUserClick = (otherPartyId : string, otherPartyDP_avatar : string, otherPartyName : string) => {
+    let newUniqueChatUUID;
+    if (userId) newUniqueChatUUID = generateConversationId(userId ,otherPartyId);
     const newActiveChat = {
     activeChatPresent: true,
-    uniqueChatUUID: "",
+    uniqueChatUUID: newUniqueChatUUID,
     otherPartyId,
     otherPartyName,
     otherPartyDP: otherPartyDP_avatar,
@@ -55,7 +68,7 @@ const sendWsMessage = useSendMessageThroughWs();
     lastRead: {
       timestamp: null,
       messageId: "",
-    },
+    }
   };
 
   console.log("Running handleNewUserClick!", newActiveChat);
@@ -82,7 +95,7 @@ const sendWsMessage = useSendMessageThroughWs();
         onClick={toggleDropdown}
       >
         <span className="">New users</span>
-        {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        { newUsersNotPresent ? <OctagonX size={18} /> : (isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />)}
       </div>
 
       <AnimatePresence initial={false}>
@@ -103,7 +116,7 @@ const sendWsMessage = useSendMessageThroughWs();
 
            */}
 
-            {newUsers.map((indvUser) => (
+            {newUsersNotPresent ? "" : newUsers.map((indvUser) => (
             <div
               key={indvUser.id}
               className={`flex items-center p-3 cursor-pointer hover:bg-gray-800 transition `}

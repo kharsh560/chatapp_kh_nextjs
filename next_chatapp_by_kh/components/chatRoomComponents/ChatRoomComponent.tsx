@@ -13,6 +13,9 @@ import { useConnectWebSocket } from "@/utils/webSocketConnectionLogic";
 import { setSocket } from "@/reduxStore/storeFeatures/WebSocketSlice";
 import { chatMessagePayload, messageTypes, useSendMessageThroughWs } from "@/utils/sendMessageThroughWs";
 import { resetActiveChat } from "@/reduxStore/storeFeatures/activeChatSlice";
+import { conversationSliceStatesType, populateConversations } from "@/reduxStore/storeFeatures/conversationSlice";
+import { PrevConversationsComponent } from "./PrevConversationsComponent";
+import { populateMessages } from "@/reduxStore/storeFeatures/messageSlice";
 
 
 export type userSliceStatesType = {
@@ -28,12 +31,15 @@ export const Chatroom = memo(({users} : {users: userSliceStatesType[]}) => {
   const userId = session.data?.user?.id;
   const userName = session.data?.user?.name;
   const [messages, setMessages] = useState<chatMessagePayload[]>([]);
-  const prevConversations = null;
+  const conversationsDetails : conversationSliceStatesType = useSelector((state : any) => state.conversations);
+  const prevConversations = conversationsDetails.conversations;
   const dispatch = useDispatch();
   const activeChat = useSelector((state : any) => {
     // console.log("state.activeChat", state.activeChat);
     return state.activeChat;
   });
+
+  // const [conversations, setConversations] = useState(null);
 
     const { connectWebSocket } = useConnectWebSocket();
 
@@ -68,34 +74,66 @@ export const Chatroom = memo(({users} : {users: userSliceStatesType[]}) => {
 
 
   // console.log("users: ", users);
+  
+  useEffect(() => {
+    console.log(`prevConversations.length = ${prevConversations.length} -> And here's that user: ${prevConversations[0]?.otherPartyName}`);
+    const usersToBeRemoved = new Set(prevConversations.map((eachConv) => eachConv.otherParty));
+    const usersExceptThoseInConv = users.filter((user) => {
+      return !(usersToBeRemoved.has(user.id));
+    });
+    console.log(`usersExceptThoseInConv.length = ${usersExceptThoseInConv.length} -> And here's that user: ${usersExceptThoseInConv}`);
+    console.log("usersExceptThoseInConv: ", usersExceptThoseInConv);
+    dispatch(populateUsers(usersExceptThoseInConv));
+  }, [users, conversationsDetails])
 
   useEffect(() => {
-    dispatch(populateUsers(users));
-  }, [users])
+    const fetchData = async () => {
+      let allConversationsOfUserResponseJson : any;
+      const getConversations = async () => {
+        try {
+          const allConversationsOfUserResponse = await fetch("http://localhost:6900/app/v1/conversations/getConversations", {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+          })
+          if (allConversationsOfUserResponse.ok) {
+            allConversationsOfUserResponseJson = await allConversationsOfUserResponse.json();
+            // console.log("allConversationsOfUserResponse: ", allConversationsOfUserResponseJson);
+            // setConversations(allConversationsOfUserResponseJson);
+            dispatch(populateConversations(allConversationsOfUserResponseJson.conversations));
+          }
+        } catch (error) {
+          console.log("Error fetching the conversations!", error);
+        }
+      }
+      await getConversations();
+  
+      const getMessages = async () => {
+        console.log("Inside getMessages function!");
+        try {
+          const allMessagesOfAllConversationsResponse = await fetch("http://localhost:6900/app/v1/messages/getAllMessagesForTheGivenConversations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({allConv: allConversationsOfUserResponseJson.conversations}),
+          })
+          let allMessagesOfAllConversationsResponseJson;
+          if (allMessagesOfAllConversationsResponse.ok) {
+            allMessagesOfAllConversationsResponseJson = await allMessagesOfAllConversationsResponse.json();
+            // console.log("allMessagesOfAllConversationsResponseJson: ", allMessagesOfAllConversationsResponseJson);
+            dispatch(populateMessages(allConversationsOfUserResponseJson));
+          }
+        } catch (error) {
+          console.log("Error fetching the messages!", error);
+        }
+      }
+      await getMessages();
+    }
+    fetchData();
+  }, []);
 
-  // console.log(messages);
- 
+  // console.log("conversations: ", conversations);
 
-  // const [firstUser, setFirstUser] = useState<string>("");
-
-  // useEffect(() => {
-  //   const getFirstUser = async () => {
-  //       try {
-  //           const res = await fetch("http://localhost:3000/api/getFirstUser");
-  //           if (!res.ok) {
-  //               throw new Error("Failed to fetch user!");
-  //           }
-  //           const user = await res.json();
-  //           setFirstUser(user.userId);
-  //           // return user;
-  //       } catch (error) {
-  //           console.log("Error: ", error);
-  //       }
-  //   }
-  //   // getFirstUser();
-  // }, [])
-
-  // console.log(firstUser);
 
   return (
     <div className="h-screen w-full flex flex-row bg-black text-white font-sans">
@@ -109,9 +147,13 @@ export const Chatroom = memo(({users} : {users: userSliceStatesType[]}) => {
         <div className=" h-16 p-4 border-b border-gray-700 text-xl font-semibold">
           Chats & Groups
         </div>
-        < NewUsersDropDownComponent setMessages={setMessages} newUsers={users} />
+        < NewUsersDropDownComponent setMessages={setMessages} />
         <div className="flex-1 overflow-y-auto">
-          {prevConversations == null ? <p className=" p-2 text-gray-400">Start a fresh conversation!</p> : ""}
+          {/* {`Conversation id: 
+          ${conversationsDetails._id}`} */}
+          {prevConversations.length == 0 ? <p className=" p-2 text-gray-400">Start a fresh conversation!</p> : (
+            <PrevConversationsComponent prevConversations={prevConversations} />
+          )}
           
         </div>
       </motion.aside>

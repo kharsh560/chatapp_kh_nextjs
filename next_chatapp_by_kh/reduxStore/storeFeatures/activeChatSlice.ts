@@ -2,7 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 export type activeChatSliceStatesType = {
     activeChatPresent: boolean;
-    uniqueChatUUID: string;
+    uniqueChatUUID: string | undefined;
     otherPartyId: string;
     otherPartyName: string;
     otherPartyDP: string;

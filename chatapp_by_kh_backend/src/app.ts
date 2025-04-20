@@ -2,8 +2,10 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 // Route imports:-
-import serverHealthCheckUpRoutes from "./routes/serverHealthCheckUp.routes"
-import webSocketInitializerRoutes from "./routes/webSocketInitializer.routes"
+import serverHealthCheckUpRoutes from "./routes/serverHealthCheckUp.routes";
+import webSocketInitializerRoutes from "./routes/webSocketInitializer.routes";
+import conversationsRoutes from "./routes/converations.routes";
+import messagesRoutes from "./routes/messages.routes"
 
 
 const app = express();
@@ -39,5 +41,7 @@ app.use(express.json());
 // HTTP routes
 app.use("/api/v1", serverHealthCheckUpRoutes);
 app.use("/api/v1/websockets", webSocketInitializerRoutes);
+app.use("/app/v1/conversations", conversationsRoutes);
+app.use("/app/v1/messages", messagesRoutes);
 
 export default app;

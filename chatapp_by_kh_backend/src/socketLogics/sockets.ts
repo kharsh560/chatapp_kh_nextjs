@@ -3,20 +3,27 @@ import { WebSocketServer, WebSocket } from "ws";
 import { v4 as uuidv4 } from "uuid";
 import { parse } from "url";
 import jwt from "jsonwebtoken"
+import { enableSaveFunction, messageQueue } from "../controllers/saveMessage.controller";
+import { Conversation } from "../models/conversation.model";
+import { conversationQueue, enableConvSaveFunction } from "../controllers/conversations.controller";
 
-type chatMessagePayload = {
+export type chatMessagePayload = {
   typeOfMessage: string;
   activeChatUniqueUUID: string;
   isGroup: boolean;
   sender: {
     userId: string;
     userName: string;
+    userAvatar: string;
   };
   reciever: {
     otherPartyId: string;
     otherPartyName: string;
+    otherPartyAvatar: string;
   };
   message: string;
+  extraPayload?: any;
+  newConversationInitialization?: boolean;
 };
 
 type decodedTokenPayload = {
@@ -40,12 +47,6 @@ export enum messageTypes {
     connected = "connected",
     closingConnection = "closingConnection"
 }
-
-
-const generateConversationId = (userId1: string, userId2: string): string => {
-  return [userId1, userId2].sort().join("+");
-};
-
 
 const clients = new Map<string, WebSocket>();
 // This is the map of clients connected through websockets.
@@ -109,7 +110,7 @@ export function setupWebSocketServer(server: HTTPServer) {
 
     ws.send(JSON.stringify({ system: "Welcome!", clientId, name: decoded.user.name }));
 
-    ws.on("message", (data, isBinary) => {
+    ws.on("message", async (data, isBinary) => {
       // const incomingMessage : {type: string, sender: {userId: string, userName: string}, reciever: {userId: string, userName: string}, message: string} = data.json();
       // console.log(`Message from ${clientId}:`, incomingMessage);
 
@@ -129,13 +130,91 @@ export function setupWebSocketServer(server: HTTPServer) {
         // Means, if, message ke ya toh sender mei ya to reciever mei, agar ham nahi haim, toh return kar jao!
         if (!(incomingMessage.sender.userId == decoded.user.sub || incomingMessage.reciever.otherPartyId == decoded.user.sub)) return;
 
+        // Now the flow is like, "here's the "uniqueIdentifier". Now, if this was not present in the incoming message's activeChatUniqueUUID, then simply make a new conversation.
 
-        let uniqueIdentifier;
-        if (incomingMessage.activeChatUniqueUUID == "") {
-          uniqueIdentifier = generateConversationId(incomingMessage.sender.userId, incomingMessage.reciever.otherPartyId);
-        } else {
-          uniqueIdentifier = incomingMessage.activeChatUniqueUUID;
+        // let uniqueIdentifier = generateConversationId(incomingMessage.sender.userId, incomingMessage.reciever.otherPartyId);
+        // incomingMessage.activeChatUniqueUUID = uniqueIdentifier;
+
+        const uniqueIdentifier = incomingMessage.activeChatUniqueUUID; // From frontend I made sure that it does come.
+
+        // Ab bas backend mei ek check kar lo, agar ye present hai backend ke coversation mei toh theek warna daal do. I also included a marker. "newConversationInitialization"
+        if (incomingMessage.newConversationInitialization && incomingMessage.newConversationInitialization == true) {
+          // Tell the backend to update the conversation
+          conversationQueue.enqueue(incomingMessage);
+          enableConvSaveFunction();
         }
+
+        // if (incomingMessage.activeChatUniqueUUID == "") {
+        //   // That means its a new chat! Create this conversation's UUID and store this in the conversation models of both the users (sender and reciever).
+        //   uniqueIdentifier = generateConversationId(incomingMessage.sender.userId, incomingMessage.reciever.otherPartyId);
+        //   if (!incomingMessage.isGroup) {
+        //     // const senderInConvOfDB = await Conversation.findOne({user: incomingMessage.sender.userId});
+        //     // const recieverInConvOfDB = await Conversation.findOne({user: incomingMessage.reciever.otherPartyId});
+
+        //     // const senderConvUpdateResponse = await Conversation.updateOne(
+        //     //   { userUUID: decoded.user.sub }, // {First arg = filter condition} Only WS of the user mei se update karo. Bcoz this will run for both, the sender as well as reciever.
+        //     //   {
+        //     //     $addToSet: {
+        //     //       // Using "$addToSet" (prevents duplicates based on entire object match):
+        //     //       conversations: {
+        //     //         uniqueChatUUID: uniqueIdentifier,
+        //     //         isGroup: incomingMessage.isGroup,
+        //     //         otherParty: decoded.user.sub == incomingMessage.sender.userId ? incomingMessage.sender.userId : incomingMessage.reciever.otherPartyId,
+        //     //         otherPartyDP: decoded.user.sub == incomingMessage.sender.userId ? incomingMessage.sender.userAvatar : incomingMessage.reciever.otherPartyAvatar ,
+        //     //         lastRead: {
+        //     //           timestamp: null,
+        //     //           messageId: null,
+        //     //         },
+        //     //       },
+        //     //     },
+        //     //   }
+        //     // );
+
+        //     incomingMessage.activeChatUniqueUUID = uniqueIdentifier;
+
+        //     const updatedConvDoc = await Conversation.findOneAndUpdate( // Used this bcoz "updateOne" does not return anything!
+        //       { userUUID: decoded.user.sub },
+        //       {
+        //         $addToSet: {
+        //           conversations: {
+        //             uniqueChatUUID: uniqueIdentifier,
+        //             isGroup: incomingMessage.isGroup,
+        //             otherParty: decoded.user.sub == incomingMessage.sender.userId
+        //               ? incomingMessage.sender.userId
+        //               : incomingMessage.reciever.otherPartyId,
+        //             otherPartyDP: decoded.user.sub == incomingMessage.sender.userId
+        //               ? incomingMessage.sender.userAvatar
+        //               : incomingMessage.reciever.otherPartyAvatar,
+        //             lastRead: {
+        //               timestamp: null,
+        //               messageId: null,
+        //             },
+        //           },
+        //         },
+        //       },
+        //       {
+        //         new: true, // I used it to make sure that it returns the updated document
+        //         upsert: true, // I used it to make sure that it creates this doc, if not found
+        //       }
+        //     );
+        //     // I needed the new doc, bcoz anyways, I need to update the "conversations slice" in the frontend. So why do an extra api call for that!
+
+            
+        //     const messageForSuccessfulConvCreation = incomingMessage;
+        //     messageForSuccessfulConvCreation.typeOfMessage = messageTypes.alert;
+        //     messageForSuccessfulConvCreation.message = "New conversation ID created for this chat.";
+        //     messageForSuccessfulConvCreation.extraPayload = updatedConvDoc;
+
+        //     [incomingMessage.sender.userId, incomingMessage.reciever.otherPartyId].forEach((memberInTheRoom) => {
+        //           if (clients.get(memberInTheRoom)?.readyState === WebSocket.OPEN) {
+        //             clients.get(memberInTheRoom)?.send(JSON.stringify(messageForSuccessfulConvCreation), { binary: isBinary });
+        //           }
+        //         })
+
+        //   }
+        // } else {
+        //   uniqueIdentifier = incomingMessage.activeChatUniqueUUID;
+        // }
 
         // Now let me first make setup of 1:1 chat.
         if (incomingMessage.typeOfMessage == messageTypes.ingress) {
@@ -235,9 +314,11 @@ export function setupWebSocketServer(server: HTTPServer) {
               // console.log("Inside messagelogic! Current conv rooms: ", conversationRooms.size);
               // Then first get the unique identifier for sender + reciever.
               // const uniqueIdentifier = generateConversationId(incomingMessage.sender.userId, incomingMessage.reciever.otherPartyId);
-
+              messageQueue.enqueue(incomingMessage);
+              enableSaveFunction();
               if (conversationRooms.has(uniqueIdentifier)) {
-                conversationRooms.get(uniqueIdentifier)?.forEach((memberInTheRoom) => {
+                // conversationRooms.get(uniqueIdentifier)? -> need to send message to both sides of the party. It may happen that the reciever is not present in the chat. So, message should reach him also.
+                [incomingMessage.sender.userId, incomingMessage.reciever.otherPartyId].forEach((memberInTheRoom) => {
                   if (clients.get(memberInTheRoom)?.readyState === WebSocket.OPEN) {
                     clients.get(memberInTheRoom)?.send(data, { binary: isBinary });
                   }
@@ -263,6 +344,7 @@ export function setupWebSocketServer(server: HTTPServer) {
       clients.delete(clientId);
       // console.log(clients.size);
       console.log(`Socket connection closed for ${clientId}. Clients remaining: ${clients.size}`);
+      messageQueue.getItems().forEach((eachMessage) => console.log(eachMessage.message));
     });
   });
 }

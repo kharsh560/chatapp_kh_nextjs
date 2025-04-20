@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
-import toastDataReducer from "../storeFeatures/toastSlice"
+import toastDataReducer from "../storeFeatures/toastSlice";
 // import webSocketReducer from "../storeFeatures/WebSocketSlice"
-import socketReducer from "../storeFeatures/WebSocketSlice"
-import allUsersArrayReducer from "../storeFeatures/allUsersSlice"
-import activeChatReducer from "../storeFeatures/activeChatSlice"
+import socketReducer from "../storeFeatures/WebSocketSlice";
+import allUsersArrayReducer from "../storeFeatures/allUsersSlice";
+import activeChatReducer from "../storeFeatures/activeChatSlice";
+import conversationReducer from "../storeFeatures/conversationSlice";
+import allMessagesReducer from "../storeFeatures/conversationSlice";
 
 export const store = configureStore({
     reducer: {
@@ -11,6 +13,8 @@ export const store = configureStore({
         socket: socketReducer,
         allUsersArray: allUsersArrayReducer,
         activeChat: activeChatReducer,
+        conversations: conversationReducer,
+        allMessages: allMessagesReducer,
     },
     middleware: (getDefaultMiddleware) =>
         getDefaultMiddleware({

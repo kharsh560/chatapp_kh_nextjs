@@ -1,8 +1,10 @@
 "use client";
 
 import { RootState } from '@/reduxStore/store/store';
+import { activeChatSliceStatesType, setActiveChat } from '@/reduxStore/storeFeatures/activeChatSlice';
+import { populateConversations } from '@/reduxStore/storeFeatures/conversationSlice';
 import { setSocket } from '@/reduxStore/storeFeatures/WebSocketSlice';
-import { messageTypes, useSendMessageThroughWs } from '@/utils/sendMessageThroughWs';
+import { chatMessagePayload, messageTypes, useSendMessageThroughWs } from '@/utils/sendMessageThroughWs';
 import { useConnectWebSocket } from '@/utils/webSocketConnectionLogic';
 import { useSession } from 'next-auth/react';
 import React, { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -50,7 +52,25 @@ const MessageInputBox = memo(({setMessagesInStateArray}: Props) => {
     //     didConnect.current = true;
     // }
 
- 
+    // const currentActiveChat : activeChatSliceStatesType = useSelector((state : any) => state.activeChat);
+    const getNewConversationsFromBackend = async () => {
+        try {
+            const createConversationRes = await fetch("http://localhost:6900/app/v1/conversations/getConversations", {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                });
+
+                if (!createConversationRes.ok) {
+                throw new Error("Failed to get user"); // Ensures errors always go to `catch`
+            }
+            const createConversationResJson = await createConversationRes.json();
+            console.log("createConversationResJson -> ",createConversationResJson);
+            dispatch(populateConversations(createConversationResJson.conversations));
+        } catch (error) {
+            console.log("Error occured: ", error);
+        }
+    }
     
     useEffect(() => {
         console.log("Inside the socket. And here is the socket: ", socket);
@@ -77,8 +97,33 @@ const MessageInputBox = memo(({setMessagesInStateArray}: Props) => {
             // };
 
             socket.onmessage = (event) => {
-                console.log("Received:", event.data);
-                setMessagesInStateArray((prev: any) => [...prev, JSON.parse(event.data)]);
+                // console.log("Received:", event.data);
+                const messageBody : chatMessagePayload = JSON.parse(event.data);
+                
+                setMessagesInStateArray((prev: any) => [...prev, messageBody]);
+
+                // After the messages are set, check additionally if the message has 
+                if (messageBody.newConversationInitialization && messageBody.newConversationInitialization == true) {
+                    console.log("In here: Calling the new conversations!");
+                    // then call for the get conversations.
+                    setTimeout(() => {
+                        console.log("Calling getNewConversationsFromBackend: ");
+                        getNewConversationsFromBackend();
+                    }, 3000);
+                }
+
+                // if (messageBody.typeOfMessage === messageTypes.message) {
+                //     setMessagesInStateArray((prev: any) => [...prev, messageBody]);
+                // } 
+                // if (messageBody.typeOfMessage === messageTypes.alert) {
+                //     if (messageBody.message === "New conversation ID created for this chat.") {
+                //         dispatch(setActiveChat({...currentActiveChat, uniqueChatUUID: messageBody.newConvUUIDcreated})); -> Now no need, because, I'm creating the new UUID upon clicking the new user in the frontend itself!
+                //         dispatch(populateConversations(messageBody.extraPayload));
+                //     }
+                //     // Also do an api call to update the conversation lists. -> No need as because, I did this using the payload of updatedConvDoc I sent using websocket!
+                // } else {
+                //     setMessagesInStateArray((prev: any) => [...prev, messageBody]);
+                // }
             };
         }
 

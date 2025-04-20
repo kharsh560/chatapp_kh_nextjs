@@ -20,10 +20,12 @@ export async function POST(req: NextRequest) {
             }
         });
 
-        console.log("response: ", res);
+        // console.log("response: ", res);
+        const jsonResponse = await JSON.parse(JSON.stringify(res));
 
         return Response.json({
-            message: "User registered successfully!"
+            message: "User registered successfully!",
+            newlyCreatedUser: jsonResponse,
         });
     } catch (error) {
         console.error("Error creating user:", error);

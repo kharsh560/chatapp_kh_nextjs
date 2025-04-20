@@ -21,12 +21,16 @@ export type chatMessagePayload = {
   sender: {
     userId: string;
     userName: string;
+    userAvatar: string;
   };
   reciever: {
     otherPartyId: string;
     otherPartyName: string;
+    otherPartyAvatar: string;
   };
   message: string;
+  extraPayload?: any;
+  newConversationInitialization?: boolean;
 };
 
 
@@ -35,11 +39,12 @@ export const useSendMessageThroughWs =  () => {
     const session = useSession();
     const userName = session.data?.user?.name;
     const userId = session.data?.user?.id;
+    const userAvatar = session.data?.user?.avatar;
     const socket = useSelector((state: RootState) => state.socket.socket);
     const activeChat = useSelector((state : RootState) => state.activeChat);
 
 
-    return (typeOfMessage : messageTypes, message : string, newActiveChat? : activeChatSliceStatesType) => {
+    return (typeOfMessage : messageTypes, message : string, newActiveChat? : activeChatSliceStatesType, newConversationInitialization? : boolean) => {
         if (newActiveChat) {
             console.log("newActiveChat: ", newActiveChat);
         }
@@ -48,9 +53,15 @@ export const useSendMessageThroughWs =  () => {
                 { typeOfMessage, 
                     activeChatUniqueUUID: newActiveChat?.uniqueChatUUID || activeChat.uniqueChatUUID, 
                     isGroup: newActiveChat?.isGroup || activeChat.isGroup,
-                    sender: {userId, userName}, 
-                    reciever: {otherPartyId: newActiveChat?.otherPartyId || activeChat.otherPartyId, 
-                    otherPartyName: newActiveChat?.otherPartyName || activeChat.otherPartyName}, message }));
+                    sender: {userId, userName, userAvatar}, 
+                    reciever: {
+                      otherPartyId: newActiveChat?.otherPartyId || activeChat.otherPartyId, 
+                      otherPartyName: newActiveChat?.otherPartyName || activeChat.otherPartyName, 
+                      otherPartyAvatar: newActiveChat?.otherPartyDP || activeChat.otherPartyDP
+                    }, 
+                    message,
+                    newConversationInitialization: newConversationInitialization ? newConversationInitialization : false,
+                }));
         }
 }
 }
