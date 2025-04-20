@@ -24,7 +24,8 @@ export type chatMessagePayload = {
     userAvatar: string;
   };
   reciever: {
-    otherPartyId: string;
+    otherPartyId?: string;
+    otherPartyObjectIdIfIts_a_GroupMessage?: string;
     otherPartyName: string;
     otherPartyAvatar: string;
   };

@@ -120,7 +120,7 @@ export const Chatroom = memo(({users} : {users: userSliceStatesType[]}) => {
           let allMessagesOfAllConversationsResponseJson;
           if (allMessagesOfAllConversationsResponse.ok) {
             allMessagesOfAllConversationsResponseJson = await allMessagesOfAllConversationsResponse.json();
-            // console.log("allMessagesOfAllConversationsResponseJson: ", allMessagesOfAllConversationsResponseJson);
+            console.log("allMessagesOfAllConversationsResponseJson: ", allMessagesOfAllConversationsResponseJson);
             dispatch(populateMessages(allConversationsOfUserResponseJson));
           }
         } catch (error) {

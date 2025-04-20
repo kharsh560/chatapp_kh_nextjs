@@ -1,15 +1,28 @@
 import { createSlice } from "@reduxjs/toolkit";
 
 export type messagesArrayType = {
-    groupId: string | null;
+    typeOfMessage: string;
+    activeChatUniqueUUID: string;
+    isGroup: boolean;
+    sender: {
+        userId: string;
+        userName: string;
+        userAvatar: string;
+    };
+    reciever: {
+        otherPartyId?: string;
+        otherPartyObjectIdIfIts_a_GroupMessage?: string;
+        otherPartyName: string;
+        otherPartyAvatar: string;
+    };
     message: string;
-    reciever: string | null;
-    sender: string;
+    extraPayload?: any;
+    newConversationInitialization?: boolean;
     createdAt: Date | null;
     updatedAt: Date | null;
     __v: number | null;
     _id: string;
-}
+};
 
 export type allMessagesSliceType = {
     currentChatroomUUID: string;

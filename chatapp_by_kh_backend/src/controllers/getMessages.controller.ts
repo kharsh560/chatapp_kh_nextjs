@@ -71,10 +71,10 @@ const getAllMessagesForTheGivenConversations = async (req: Request, res: Respons
 
   try {
     messages = await Message.find({
-      $or: [
-        { sender: id1, receiver: id2 },
-        { sender: id2, receiver: id1 },
-      ],
+    $or: [
+        { "sender.userId": id1, "reciever.otherPartyId": id2 },
+        { "sender.userId": id2, "reciever.otherPartyId": id1 },
+    ],
     }).sort({ createdAt: 1 });
   } catch (error) {
     console.log("Error finding messages for the chatroom: ", currentChatroomUUID);

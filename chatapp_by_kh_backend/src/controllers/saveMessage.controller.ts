@@ -55,14 +55,42 @@ const saveMessageFxn = async () => {
 
             const options = lastMessage?.isGroup
                 ? {
-                    sender: lastMessage?.sender.userId,
-                    groupId: lastMessage?.reciever.otherPartyId,
+                    typeOfMessage: lastMessage.typeOfMessage,
+                    activeChatUniqueUUID: lastMessage?.activeChatUniqueUUID,
+                    isGroup: lastMessage?.isGroup,
+                    sender: {
+                        userId: lastMessage?.sender?.userId,
+                        userName: lastMessage?.sender?.userName,
+                        userAvatar: lastMessage?.sender?.userAvatar,
+                    },
+                    reciever: {
+                        otherPartyId: null,
+                        otherPartyObjectIdIfIts_a_GroupMessage: lastMessage?.reciever?.otherPartyObjectIdIfIts_a_GroupMessage,
+                        otherPartyName: lastMessage?.reciever?.otherPartyName,
+                        otherPartyAvatar: lastMessage?.reciever?.otherPartyAvatar,
+                    },
                     message: lastMessage?.message,
+                    extraPayload: null, //lastMessage?.extraPayload,
+                    newConversationInitialization: lastMessage?.newConversationInitialization,
                 }
                 : {
-                    sender: lastMessage?.sender.userId,
-                    receiver: lastMessage?.reciever.otherPartyId,
+                    typeOfMessage: lastMessage?.typeOfMessage,
+                    activeChatUniqueUUID: lastMessage?.activeChatUniqueUUID,
+                    isGroup: lastMessage?.isGroup,
+                    sender: {
+                        userId: lastMessage?.sender?.userId,
+                        userName: lastMessage?.sender?.userName,
+                        userAvatar: lastMessage?.sender?.userAvatar,
+                    },
+                    reciever: {
+                        otherPartyId: lastMessage?.reciever?.otherPartyId,
+                        otherPartyObjectIdIfIts_a_GroupMessage: null,
+                        otherPartyName: lastMessage?.reciever?.otherPartyName,
+                        otherPartyAvatar: lastMessage?.reciever?.otherPartyAvatar,
+                    },
                     message: lastMessage?.message,
+                    extraPayload: null, //lastMessage?.extraPayload,
+                    newConversationInitialization: lastMessage?.newConversationInitialization,
                 };
 
                 try {

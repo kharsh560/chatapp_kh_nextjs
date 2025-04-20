@@ -17,7 +17,8 @@ export type chatMessagePayload = {
     userAvatar: string;
   };
   reciever: {
-    otherPartyId: string;
+    otherPartyId?: string;
+    otherPartyObjectIdIfIts_a_GroupMessage?: string;
     otherPartyName: string;
     otherPartyAvatar: string;
   };
@@ -243,9 +244,9 @@ export function setupWebSocketServer(server: HTTPServer) {
               //     }
               //   }
               // })
-              if (clients.get(incomingMessage.reciever.otherPartyId)?.readyState === WebSocket.OPEN) {
-                  console.log(`${incomingMessage.reciever.otherPartyName} is connected!`);
-                  clients.get(incomingMessage.reciever.otherPartyId)?.send(JSON.stringify(newIncomingMessage), {binary: isBinary});
+               if (clients.get(incomingMessage.reciever.otherPartyId ?? "")?.readyState === WebSocket.OPEN) {
+                  console.log(`${incomingMessage.reciever.otherPartyName ?? ""} is connected!`);
+                  clients.get(incomingMessage.reciever.otherPartyId ?? "")?.send(JSON.stringify(newIncomingMessage), {binary: isBinary});
                 }
             } else { // Means, nahi exist karta hai wo room!
               console.log(`Creating new room: ${uniqueIdentifier}`);
@@ -288,9 +289,9 @@ export function setupWebSocketServer(server: HTTPServer) {
                 // NOTE: How to get the other sender, means I, can be anyone, sender or reciever!
                 // const otherPartyId = 
                 console.log("Inside, room already created of egress + closingConnection!");
-                 if (clients.get(incomingMessage.reciever.otherPartyId)?.readyState === WebSocket.OPEN) {
+                 if (clients.get(incomingMessage.reciever.otherPartyId ?? "")?.readyState === WebSocket.OPEN) {
                   console.log(`${incomingMessage.reciever.otherPartyName} is connected! So, notifying them of egression of the other party: ${incomingMessage.sender.userName}!`);
-                  clients.get(incomingMessage.reciever.otherPartyId)?.send(JSON.stringify(newIncomingMessage), {binary: isBinary});
+                  clients.get(incomingMessage.reciever.otherPartyId ?? "")?.send(JSON.stringify(newIncomingMessage), {binary: isBinary});
                 }
                 // [incomingMessage.sender.userId, incomingMessage.reciever.otherPartyId].map((indvId) => {
                 //   if (indvId != decoded.user.sub) {
@@ -319,8 +320,8 @@ export function setupWebSocketServer(server: HTTPServer) {
               if (conversationRooms.has(uniqueIdentifier)) {
                 // conversationRooms.get(uniqueIdentifier)? -> need to send message to both sides of the party. It may happen that the reciever is not present in the chat. So, message should reach him also.
                 [incomingMessage.sender.userId, incomingMessage.reciever.otherPartyId].forEach((memberInTheRoom) => {
-                  if (clients.get(memberInTheRoom)?.readyState === WebSocket.OPEN) {
-                    clients.get(memberInTheRoom)?.send(data, { binary: isBinary });
+                  if (clients.get(memberInTheRoom ?? "")?.readyState === WebSocket.OPEN) {
+                    clients.get(memberInTheRoom ?? "")?.send(data, { binary: isBinary });
                   }
                 })
               } else {
