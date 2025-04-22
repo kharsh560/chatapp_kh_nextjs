@@ -5,7 +5,10 @@ import socketReducer from "../storeFeatures/WebSocketSlice";
 import allUsersArrayReducer from "../storeFeatures/allUsersSlice";
 import activeChatReducer from "../storeFeatures/activeChatSlice";
 import conversationReducer from "../storeFeatures/conversationSlice";
-import allMessagesReducer from "../storeFeatures/conversationSlice";
+import allMessagesReducer from "../storeFeatures/messageSlice";
+
+import { enableMapSet } from 'immer';
+enableMapSet();
 
 export const store = configureStore({
     reducer: {

@@ -15,7 +15,7 @@ import { chatMessagePayload, messageTypes, useSendMessageThroughWs } from "@/uti
 import { resetActiveChat } from "@/reduxStore/storeFeatures/activeChatSlice";
 import { conversationSliceStatesType, populateConversations } from "@/reduxStore/storeFeatures/conversationSlice";
 import { PrevConversationsComponent } from "./PrevConversationsComponent";
-import { populateMessages } from "@/reduxStore/storeFeatures/messageSlice";
+import { messagesArrayType, populateMessages } from "@/reduxStore/storeFeatures/messageSlice";
 
 
 export type userSliceStatesType = {
@@ -30,7 +30,7 @@ export const Chatroom = memo(({users} : {users: userSliceStatesType[]}) => {
   // console.log(session);
   const userId = session.data?.user?.id;
   const userName = session.data?.user?.name;
-  const [messages, setMessages] = useState<chatMessagePayload[]>([]);
+  // const [messages, setMessages] = useState<chatMessagePayload[]>([]);
   const conversationsDetails : conversationSliceStatesType = useSelector((state : any) => state.conversations);
   const prevConversations = conversationsDetails.conversations;
   const dispatch = useDispatch();
@@ -38,6 +38,17 @@ export const Chatroom = memo(({users} : {users: userSliceStatesType[]}) => {
     // console.log("state.activeChat", state.activeChat);
     return state.activeChat;
   });
+  const allMessagesMap = useSelector((state:RootState) => {
+    // console.log("redux state.allMessages", state.allMessages.allMessagesMap);
+    // console.log("redux state.conversations", state.conversations);
+    return state.allMessages.allMessagesMap;
+  });
+  // console.log("allMessages: ", allMessagesMap);
+  // console.log("allMessagesType: ", typeof(allMessagesMap));
+  // console.log("redux state.allMessages", useSelector((state: RootState) => state.allMessages));
+  let messages : messagesArrayType[] = allMessagesMap?.get(activeChat.uniqueChatUUID) || [];
+  const setMessages = () => {};
+  console.log(`messages for: ${activeChat.uniqueChatUUID} = ${messages}`);
 
   // const [conversations, setConversations] = useState(null);
 
@@ -120,8 +131,9 @@ export const Chatroom = memo(({users} : {users: userSliceStatesType[]}) => {
           let allMessagesOfAllConversationsResponseJson;
           if (allMessagesOfAllConversationsResponse.ok) {
             allMessagesOfAllConversationsResponseJson = await allMessagesOfAllConversationsResponse.json();
-            console.log("allMessagesOfAllConversationsResponseJson: ", allMessagesOfAllConversationsResponseJson);
-            dispatch(populateMessages(allConversationsOfUserResponseJson));
+            // console.log("allMessagesOfAllConversationsResponseJson: ", allMessagesOfAllConversationsResponseJson);
+            console.log("Dispatching populateMessages.");
+            dispatch(populateMessages(allMessagesOfAllConversationsResponseJson));
           }
         } catch (error) {
           console.log("Error fetching the messages!", error);
