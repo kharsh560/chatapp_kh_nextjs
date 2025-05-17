@@ -18,7 +18,7 @@ export function HomePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        Chat Like Never Before
+        Chat Like Never Before!
       </motion.h1>
       
       <motion.p
