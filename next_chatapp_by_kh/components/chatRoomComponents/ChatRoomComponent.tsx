@@ -15,7 +15,7 @@ import { chatMessagePayload, messageTypes, useSendMessageThroughWs } from "@/uti
 import { resetActiveChat } from "@/reduxStore/storeFeatures/activeChatSlice";
 import { conversationSliceStatesType, populateConversations } from "@/reduxStore/storeFeatures/conversationSlice";
 import { PrevConversationsComponent } from "./PrevConversationsComponent";
-import { messagesArrayType, populateMessages } from "@/reduxStore/storeFeatures/messageSlice";
+import { insertMessages, messagesArrayType, populateMessages } from "@/reduxStore/storeFeatures/messageSlice";
 
 
 export type userSliceStatesType = {
@@ -47,7 +47,10 @@ export const Chatroom = memo(({users} : {users: userSliceStatesType[]}) => {
   // console.log("allMessagesType: ", typeof(allMessagesMap));
   // console.log("redux state.allMessages", useSelector((state: RootState) => state.allMessages));
   let messages : messagesArrayType[] = allMessagesMap?.get(activeChat.uniqueChatUUID) || [];
-  const setMessages = () => {};
+  // Messages are a map of chatRoomUUID -> messages.
+  const setMessages = (message : messagesArrayType, isNewMessage: boolean = false) => {
+    dispatch(insertMessages({chatRoomUUIDinWhichMessageIsToBeInserted: message.activeChatUniqueUUID, message, isNewMessage}))
+  };
   console.log(`messages for: ${activeChat.uniqueChatUUID} = ${messages}`);
 
   // const [conversations, setConversations] = useState(null);
@@ -164,7 +167,7 @@ export const Chatroom = memo(({users} : {users: userSliceStatesType[]}) => {
           {/* {`Conversation id: 
           ${conversationsDetails._id}`} */}
           {prevConversations.length == 0 ? <p className=" p-2 text-gray-400">Start a fresh conversation!</p> : (
-            <PrevConversationsComponent prevConversations={prevConversations} />
+            <PrevConversationsComponent prevConversations={prevConversations} setMessages={setMessages} />
           )}
           
         </div>

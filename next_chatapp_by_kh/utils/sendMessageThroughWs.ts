@@ -53,7 +53,8 @@ export const useSendMessageThroughWs =  () => {
             socket?.send(JSON.stringify(
                 { typeOfMessage, 
                     activeChatUniqueUUID: newActiveChat?.uniqueChatUUID || activeChat.uniqueChatUUID, 
-                    isGroup: newActiveChat?.isGroup || activeChat.isGroup,
+                    isGroup: newActiveChat ?  newActiveChat.isGroup : activeChat.isGroup,
+                    // Changed this because, in the case where "isGroup" is false, the second one ran and it gave "null"
                     sender: {userId, userName, userAvatar}, 
                     reciever: {
                       otherPartyId: newActiveChat?.otherPartyId || activeChat.otherPartyId, 

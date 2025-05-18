@@ -9,6 +9,7 @@ import { RootState } from "@/reduxStore/store/store";
 import { useSession } from "next-auth/react";
 import { messageTypes, useSendMessageThroughWs } from "@/utils/sendMessageThroughWs";
 import { userSliceStatesType } from "./ChatRoomComponent";
+import { generateConversationId } from "@/utils/generateConversationId";
 
 
 const NewUsersDropDownComponent = ({setMessages} : {setMessages : any}) => {
@@ -41,35 +42,29 @@ const sendWsMessage = useSendMessageThroughWs();
   const sendIngressEgressMessageToServer = (newActiveChat : activeChatSliceStatesType) => {
       if (socket) {
           if (activeChat.activeChatPresent) {
-              sendWsMessage(messageTypes.egress, `Client: ${userName} is disconnected!`)
-              setMessages([]);
+              sendWsMessage(messageTypes.egress, `Client: ${userName} is disconnected!`);
           }
           // Yes, "ingress" toh hoga hee!
-          sendWsMessage(messageTypes.ingress, `Client: ${userName} is connecting!`, newActiveChat, true);
+          sendWsMessage(messageTypes.ingress, `Client: ${userName} is connecting with ${newActiveChat.otherPartyName}.`, newActiveChat, true);
           // sendWsMessage(messageTypes.connected, `Client: ${userName} is connected!`);
       }
   }
 
-  const generateConversationId = (userId1: string, userId2: string): string => {
-    return [userId1, userId2].sort().join("+");
-  };
-
-
   const handleNewUserClick = (otherPartyId : string, otherPartyDP_avatar : string, otherPartyName : string) => {
-    let newUniqueChatUUID;
-    if (userId) newUniqueChatUUID = generateConversationId(userId ,otherPartyId);
-    const newActiveChat = {
-    activeChatPresent: true,
-    uniqueChatUUID: newUniqueChatUUID,
-    otherPartyId,
-    otherPartyName,
-    otherPartyDP: otherPartyDP_avatar,
-    isGroup: false,
-    lastRead: {
-      timestamp: null,
-      messageId: "",
-    }
-  };
+      let newUniqueChatUUID;
+      if (userId) newUniqueChatUUID = generateConversationId(userId ,otherPartyId);
+      const newActiveChat = {
+      activeChatPresent: true,
+      uniqueChatUUID: newUniqueChatUUID,
+      otherPartyId,
+      otherPartyName,
+      otherPartyDP: otherPartyDP_avatar,
+      isGroup: false,
+      lastRead: {
+        timestamp: null,
+        messageId: "",
+      }
+    };
 
   console.log("Running handleNewUserClick!", newActiveChat);
   

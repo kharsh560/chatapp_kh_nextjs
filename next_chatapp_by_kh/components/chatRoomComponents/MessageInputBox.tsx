@@ -97,19 +97,20 @@ const MessageInputBox = memo(({setMessagesInStateArray}: Props) => {
             // };
 
             socket.onmessage = (event) => {
-                // console.log("Received:", event.data);
+                console.log("Received:", event.data);
                 const messageBody : chatMessagePayload = JSON.parse(event.data);
-                
-                setMessagesInStateArray((prev: any) => [...prev, messageBody]);
 
                 // After the messages are set, check additionally if the message has 
                 if (messageBody.newConversationInitialization && messageBody.newConversationInitialization == true) {
+                    setMessagesInStateArray(messageBody, true);
                     console.log("In here: Calling the new conversations!");
                     // then call for the get conversations.
                     setTimeout(() => {
                         console.log("Calling getNewConversationsFromBackend: ");
                         getNewConversationsFromBackend();
                     }, 3000);
+                } else {
+                    setMessagesInStateArray(messageBody, false);
                 }
 
                 // if (messageBody.typeOfMessage === messageTypes.message) {

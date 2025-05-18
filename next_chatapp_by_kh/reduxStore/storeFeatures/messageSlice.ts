@@ -58,14 +58,25 @@ export const allMessagesSliceState = createSlice({
             //     newMap.set(eachMessage.currentChatroomUUID, eachMessage.message);
             // }
             for (const { currentChatroomUUID, messages } of action.payload) {
-                console.log("messages from the slice: ", messages);
+                // console.log("messages from the slice: ", messages);
                 newMap.set(currentChatroomUUID, messages);
             }
             return {allMessagesMap: newMap};
+        },
+        insertMessages: (state, action) => {
+            // console.log("action.payload of insertMessages: ", action.payload)
+            const newMap = new Map<string, messagesArrayType[]>(state.allMessagesMap);
+            const messageArrayInWhichMessageIsToBeInserted = newMap.get(action.payload.chatRoomUUIDinWhichMessageIsToBeInserted);
+            if (!messageArrayInWhichMessageIsToBeInserted || messageArrayInWhichMessageIsToBeInserted == undefined) {
+                newMap.set(action.payload.chatRoomUUIDinWhichMessageIsToBeInserted, [action.payload.message]);
+                return {allMessagesMap: newMap};
+            } else {
+                messageArrayInWhichMessageIsToBeInserted?.push(action.payload.message);
+            }
         }
     }
 })
 
-export const { populateMessages } = allMessagesSliceState.actions;
+export const { populateMessages, insertMessages } = allMessagesSliceState.actions;
 
 export default allMessagesSliceState.reducer;
